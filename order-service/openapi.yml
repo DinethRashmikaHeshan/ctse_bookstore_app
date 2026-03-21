@@ -1,0 +1,90 @@
+openapi: 3.0.0
+info:
+  title: Order Service API
+  description: Order placement and tracking
+  version: 1.0.0
+servers:
+  - url: http://localhost:3003
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: Healthy }
+  /api/orders:
+    post:
+      summary: Place a new order (calls Book Service + Notification Service)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookId, quantity]
+              properties:
+                bookId: { type: string }
+                quantity: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: Order placed }
+        '400': { description: Validation error or insufficient stock }
+  /api/orders/my:
+    get:
+      summary: Get current user's orders
+      security:
+        - BearerAuth: []
+      responses:
+        '200': { description: User orders }
+  /api/orders/user/{userId}:
+    get:
+      summary: Get orders by user ID (internal - called by User Service)
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Orders for user }
+  /api/orders/{id}:
+    get:
+      summary: Get order by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Order found }
+        '404': { description: Not found }
+  /api/orders/{id}/status:
+    patch:
+      summary: Update order status (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, confirmed, shipped, delivered, cancelled]
+      responses:
+        '200': { description: Status updated }

@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+.next/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

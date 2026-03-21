@@ -1,0 +1,63 @@
+openapi: 3.0.0
+info:
+  title: Notification Service API
+  description: In-app notifications
+  version: 1.0.0
+servers:
+  - url: http://localhost:3004
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: Healthy }
+  /api/notifications/order-placed:
+    post:
+      summary: Create order notification (called by Order Service)
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, userId, userEmail, bookTitle, quantity, totalPrice]
+              properties:
+                orderId: { type: string }
+                userId: { type: string }
+                userEmail: { type: string }
+                bookTitle: { type: string }
+                quantity: { type: integer }
+                totalPrice: { type: string }
+      responses:
+        '201': { description: Notification created }
+  /api/notifications/my:
+    get:
+      summary: Get current user's notifications
+      security:
+        - BearerAuth: []
+      responses:
+        '200': { description: User notifications }
+  /api/notifications/{id}/read:
+    patch:
+      summary: Mark notification as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Marked as read }
