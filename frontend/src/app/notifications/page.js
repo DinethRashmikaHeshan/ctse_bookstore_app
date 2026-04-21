@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const { user, loading: authLoading }    = useAuth();
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function NotificationsPage() {
     try {
       await notificationsAPI.markRead(id);
       setNotifications(prev => prev.map(n => (n._id || n.id) === id ? { ...n, read: true } : n));
-    } catch {}
+    } catch { }
   };
 
   if (authLoading || loading) {
@@ -72,7 +72,7 @@ export default function NotificationsPage() {
                   onClick={() => handleMarkRead(n._id || n.id)}
                   className="btn-secondary text-xs whitespace-nowrap"
                 >
-                  Mark read
+                  Mark read test
                 </button>
               )}
             </div>
