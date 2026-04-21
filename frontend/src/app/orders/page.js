@@ -48,28 +48,46 @@ export default function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
-            <div key={order.id} className="card">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-sans text-xs text-stone-400 mb-1">Order #{order.id.slice(0, 8)}…</p>
-                  <h2 className="font-serif text-lg font-bold text-stone-800">{order.bookTitle}</h2>
-                  <p className="text-stone-500 text-sm font-sans">by {order.bookAuthor}</p>
+          {orders.map((order) => {
+            const orderId = order._id || order.id;
+            return (
+              <div key={orderId} className="card">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-sans text-xs text-stone-400 mb-1">Order #{orderId?.slice(0, 8)}…</p>
+                    {order.items && order.items.length > 0 ? (
+                      order.items.map((item, idx) => (
+                        <div key={item._id || idx}>
+                          <h2 className="font-serif text-lg font-bold text-stone-800">{item.title}</h2>
+                        </div>
+                      ))
+                    ) : (
+                      <h2 className="font-serif text-lg font-bold text-stone-800">{order.bookTitle || 'Unknown Book'}</h2>
+                    )}
+                  </div>
+                  <span className={`badge ${STATUS_COLORS[order.status] || 'bg-stone-100 text-stone-600'}`}>
+                    {order.status}
+                  </span>
                 </div>
-                <span className={`badge ${STATUS_COLORS[order.status] || 'bg-stone-100 text-stone-600'}`}>
-                  {order.status}
-                </span>
+                <div className="flex gap-6 text-sm font-sans text-stone-600 border-t border-stone-100 pt-3 mt-3">
+                  {order.items && order.items.length > 0 ? (
+                    <>
+                      <span>Qty: <strong>{order.items.reduce((sum, i) => sum + i.quantity, 0)}</strong></span>
+                      <span>Total: <strong className="text-stone-800">${Number(order.total).toFixed(2)}</strong></span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Qty: <strong>{order.quantity}</strong></span>
+                      <span>Total: <strong className="text-stone-800">${order.totalPrice || order.total}</strong></span>
+                    </>
+                  )}
+                  <span className="ml-auto text-stone-400 text-xs">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-6 text-sm font-sans text-stone-600 border-t border-stone-100 pt-3 mt-3">
-                <span>Qty: <strong>{order.quantity}</strong></span>
-                <span>Unit: <strong>${order.unitPrice}</strong></span>
-                <span>Total: <strong className="text-stone-800">${order.totalPrice}</strong></span>
-                <span className="ml-auto text-stone-400 text-xs">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
