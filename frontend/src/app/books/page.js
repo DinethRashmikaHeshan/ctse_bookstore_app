@@ -278,7 +278,7 @@ export default function BooksPage() {
                     ? "Ordering…"
                     : book.stock === 0
                       ? "Out of Stock"
-                      : "Buy Now"}
+                      : "Buy Nowb Fast"}
                 </button>
               </div>
             </div>
