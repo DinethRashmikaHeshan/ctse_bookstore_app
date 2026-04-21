@@ -30,6 +30,9 @@ router.post('/', [
   const { bookId, quantity } = req.body;
 
   try {
+    console.log('[ORDER] Incoming request body:', JSON.stringify(req.body));
+    console.log('[ORDER] Authenticated user:', JSON.stringify(req.user));
+
     // Step 1: Validate book exists and check stock (calls Book Service)
     let book;
     try {
@@ -37,13 +40,17 @@ router.post('/', [
         `${BOOK_SERVICE_URL}/api/books/${bookId}`,
         { headers: internalHeaders, timeout: 5000 }
       );
-      book = bookRes.data.book;
+      console.log('[ORDER] Book service raw response:', JSON.stringify(bookRes.data));
+      book = bookRes.data.book || bookRes.data;
+      console.log('[ORDER] Resolved book object:', JSON.stringify(book));
+      console.log('[ORDER] book.price =', book.price, '| type:', typeof book.price);
     } catch (err) {
+      console.error('[ORDER] Book service call failed:', err.message);
       return res.status(404).json({ error: 'Book not found or Book Service unavailable' });
     }
 
-    if (book.stock < quantity) {
-      return res.status(400).json({ error: `Insufficient stock. Available: ${book.stock}` });
+    if (!book || book.stock < quantity) {
+      return res.status(400).json({ error: `Insufficient stock. Available: ${book?.stock}` });
     }
 
     // Step 2: Reserve stock (calls Book Service)
@@ -54,31 +61,37 @@ router.post('/', [
     );
 
     // Step 3: Create the order
-    const orderItems = [{
-      bookId,
-      title: book.title,
-      quantity,
-      price: book.price
-    }];
-    const orderTotal = Number((book.price * quantity).toFixed(2));
-
-    const order = await orderStore.create({
+    const orderPayload = {
       userId: req.user.id,
-      items: orderItems,
-      total: orderTotal
-    });
+      items: [{
+        bookId,
+        title: book.title,
+        quantity,
+        price: book.price
+      }],
+      total: Number((book.price * quantity).toFixed(2))
+    };
+    console.log('[ORDER] Order payload to save:', JSON.stringify(orderPayload));
+    console.log('[ORDER] total value:', orderPayload.total, '| type:', typeof orderPayload.total);
+
+    const order = await orderStore.create(orderPayload);
+    console.log('[ORDER] Order saved successfully:', order._id);
 
     // Step 4: Notify (non-blocking - fire and forget)
     axios.post(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/order-placed`,
-      { orderId: order.id, userId: req.user.id, userEmail: req.user.email, bookTitle: book.title, quantity, totalPrice: order.total },
+      { orderId: order._id, userId: req.user.id, userEmail: req.user.email, bookTitle: book.title, quantity, totalPrice: order.total },
       { headers: internalHeaders, timeout: 5000 }
-    ).catch(err => console.error('Notification failed (non-critical):', err.message));
+    ).catch(err => console.error('[ORDER] Notification failed (non-critical):', err.message));
 
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
-    console.error('Order creation error:', err.message);
-    res.status(500).json({ error: 'Failed to create order' });
+    console.error('[ORDER] Order creation error:', err.message);
+    if (err.errors) {
+      console.error('[ORDER] Validation error details:', JSON.stringify(err.errors));
+    }
+    console.error('[ORDER] Full error:', err.stack);
+    res.status(500).json({ error: 'Failed to create order', details: err.message });
   }
 });
 
