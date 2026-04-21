@@ -29,7 +29,7 @@ export default function NotificationsPage() {
   const handleMarkRead = async (id) => {
     try {
       await notificationsAPI.markRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => (n._id || n.id) === id ? { ...n, read: true } : n));
     } catch {}
   };
 
@@ -55,7 +55,7 @@ export default function NotificationsPage() {
       ) : (
         <div className="space-y-3">
           {notifications.map((n) => (
-            <div key={n.id} className={`card flex items-start justify-between gap-4 ${!n.read ? 'border-l-4 border-l-stone-800' : ''}`}>
+            <div key={n._id || n.id} className={`card flex items-start justify-between gap-4 ${!n.read ? 'border-l-4 border-l-stone-800' : ''}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-lg">{n.type === 'order-placed' ? '🛒' : '👋'}</span>
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
               </div>
               {!n.read && (
                 <button
-                  onClick={() => handleMarkRead(n.id)}
+                  onClick={() => handleMarkRead(n._id || n.id)}
                   className="btn-secondary text-xs whitespace-nowrap"
                 >
                   Mark read
