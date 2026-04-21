@@ -54,21 +54,24 @@ router.post('/', [
     );
 
     // Step 3: Create the order
+    const orderItems = [{
+      bookId,
+      title: book.title,
+      quantity,
+      price: book.price
+    }];
+    const orderTotal = Number((book.price * quantity).toFixed(2));
+
     const order = await orderStore.create({
       userId: req.user.id,
-      userEmail: req.user.email,
-      bookId,
-      bookTitle: book.title,
-      bookAuthor: book.author,
-      quantity,
-      unitPrice: book.price,
-      totalPrice: (book.price * quantity).toFixed(2)
+      items: orderItems,
+      total: orderTotal
     });
 
     // Step 4: Notify (non-blocking - fire and forget)
     axios.post(
       `${NOTIFICATION_SERVICE_URL}/api/notifications/order-placed`,
-      { orderId: order.id, userId: req.user.id, userEmail: req.user.email, bookTitle: book.title, quantity, totalPrice: order.totalPrice },
+      { orderId: order.id, userId: req.user.id, userEmail: req.user.email, bookTitle: book.title, quantity, totalPrice: order.total },
       { headers: internalHeaders, timeout: 5000 }
     ).catch(err => console.error('Notification failed (non-critical):', err.message));
 
