@@ -37,10 +37,10 @@ export default function BooksPage() {
 
   const handleOrder = async (book) => {
     if (!user) { router.push('/auth/login'); return; }
-    setOrdering(book.id);
+    setOrdering(book._id);
     setMsg('');
     try {
-      await ordersAPI.placeOrder({ bookId: book.id, quantity: 1 });
+      await ordersAPI.placeOrder({ bookId: book._id || book.id, quantity: 1 });
       setMsg(`✅ Order placed for "${book.title}"! Check your notifications.`);
       loadBooks({ search }); // refresh stock
     } catch (err) {
@@ -88,7 +88,7 @@ export default function BooksPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {books.map((book) => (
-            <div key={book.id} className="card flex flex-col justify-between gap-4">
+            <div key={book._id} className="card flex flex-col justify-between gap-4">
               <div>
                 <span className="badge bg-stone-100 text-stone-600 mb-3">{book.category}</span>
                 <h2 className="font-serif text-xl font-bold text-stone-800 mb-1">{book.title}</h2>
@@ -102,10 +102,10 @@ export default function BooksPage() {
                 </div>
                 <button
                   onClick={() => handleOrder(book)}
-                  disabled={ordering === book.id || book.stock === 0}
+                  disabled={ordering === book._id || book.stock === 0}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {ordering === book.id ? 'Ordering…' : book.stock === 0 ? 'Out of Stock' : 'Buy Now'}
+                  {ordering === book._id ? 'Ordering…' : book.stock === 0 ? 'Out of Stock' : 'Buy Now'}
                 </button>
               </div>
             </div>

@@ -14,6 +14,13 @@ const internalHeaders = { 'x-api-key': INTERNAL_API_KEY };
 // POST /api/orders - place a new order (calls Book Service + Notification Service)
 router.post('/', [
   authenticateToken,
+  (req, res, next) => {
+    // Normalize _id to bookId if the client sends _id directly from the books response
+    if (!req.body.bookId && req.body._id) {
+      req.body.bookId = req.body._id;
+    }
+    next();
+  },
   body('bookId').notEmpty().withMessage('bookId is required'),
   body('quantity').isInt({ min: 1 }).withMessage('quantity must be at least 1')
 ], async (req, res) => {
